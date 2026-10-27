@@ -116,25 +116,17 @@
     50%      { opacity: .85; transform: scale(1.05); }
   }
 
-  /* 流星：每轮只亮一小段，其余时间静止 */
-  .meteor {
-    opacity: 0;
-    transform: translate(var(--mx), var(--my));
-    animation: shoot 11s linear infinite;
+  /* 流星由脚本随机生成，关灯后不再出现 */
+  .meteor { animation: meteorFly var(--dur, 1s) linear forwards; }
+
+  @keyframes meteorFly {
+    0%   { opacity: 0; transform: translate(var(--x), var(--y)); }
+    9%   { opacity: 1; }
+    62%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(var(--x) - var(--dx)), calc(var(--y) + var(--dy))); }
   }
 
-  .m1 { --mx: 336px; --my: 44px;  animation-delay: 3.2s; }
-  .m2 { --mx: 286px; --my: 128px; animation-delay: 9.4s; }
-  .m3 { --mx: 356px; --my: 196px; animation-delay: 15.8s; }
-
-  @keyframes shoot {
-    0%   { opacity: 0; transform: translate(var(--mx), var(--my)); }
-    1.5% { opacity: .85; }
-    7%   { opacity: 0; transform: translate(calc(var(--mx) - 132px), calc(var(--my) + 74px)); }
-    100% { opacity: 0; transform: translate(calc(var(--mx) - 132px), calc(var(--my) + 74px)); }
-  }
-
-  body.asleep .meteor { display: none; }
+  body.asleep #meteors { display: none; }
 
   /* 关灯后飘起的 Zzz */
   .zzz { opacity: 0; transition: opacity .8s ease; }
@@ -236,42 +228,44 @@
           <stop offset="0%"   stop-color="#FBD58C"/>
           <stop offset="100%" stop-color="#E9A646"/>
         </linearGradient>
-        <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%"   stop-color="#F7EBD5" stop-opacity="0"/>
-          <stop offset="100%" stop-color="#F7EBD5" stop-opacity=".95"/>
+        <linearGradient id="streak" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#F7EBD5" stop-opacity=".95"/>
+          <stop offset="100%" stop-color="#F7EBD5" stop-opacity="0"/>
         </linearGradient>
         <mask id="boat">
           <rect x="0" y="0" width="400" height="320" fill="#000"/>
           <circle cx="200" cy="128" r="74" fill="#fff"/>
-          <circle cx="200" cy="88"  r="68" fill="#000"/>
+          <circle cx="200" cy="78"  r="58" fill="#000"/>
         </mask>
       </defs>
 
       <g class="stars" id="stars"></g>
 
-      <!-- 流星 -->
-      <g class="meteor m1"><line x1="0" y1="0" x2="26" y2="-15" stroke="url(#streak)" stroke-width="1.6" stroke-linecap="round"/></g>
-      <g class="meteor m2"><line x1="0" y1="0" x2="20" y2="-11" stroke="url(#streak)" stroke-width="1.4" stroke-linecap="round"/></g>
-      <g class="meteor m3"><line x1="0" y1="0" x2="30" y2="-17" stroke="url(#streak)" stroke-width="1.8" stroke-linecap="round"/></g>
-
       <g class="moon-wrap">
         <circle class="halo" cx="200" cy="118" r="118" fill="url(#glowGrad)"/>
         <circle cx="200" cy="128" r="74" fill="url(#moonFace)" mask="url(#boat)"/>
 
-        <g transform="rotate(-7 200 180)">
+        <g transform="rotate(-6 200 175)">
           <g class="cat">
-            <g fill="#3B2C5A">
-              <ellipse cx="204" cy="180" rx="31" ry="13"/>
-              <circle cx="172" cy="172" r="12"/>
-              <path d="M162 164l-5-11 12 6z"/>
-              <path d="M179 160l8-8 3 11z"/>
+            <!-- 身体 -->
+            <ellipse cx="206" cy="176" rx="28" ry="16" fill="#3B2C5A"/>
+            <!-- 尾巴翘起来 -->
+            <path d="M232 181c12 3 18-4 17-13-1-7-6-10-11-8" fill="none"
+                  stroke="#3B2C5A" stroke-width="6.5" stroke-linecap="round"/>
+            <!-- 前爪搭在身前 -->
+            <ellipse cx="168" cy="185" rx="12" ry="6.5" fill="#3B2C5A"/>
+            <!-- 脑袋 -->
+            <circle cx="176" cy="170" r="16" fill="#3B2C5A"/>
+            <!-- 耳朵 -->
+            <path d="M161 158 155 143l18 9z" fill="#3B2C5A"/>
+            <path d="M178 152l10-10 3 15z" fill="#3B2C5A"/>
+            <!-- 闭着的眼睛 -->
+            <g stroke="#F2B95C" stroke-width="1.8" stroke-linecap="round" fill="none">
+              <path d="M166 171q4 4 8 0"/>
+              <path d="M179 170q4 4 8 0"/>
             </g>
-            <path d="M233 181c12-1 15 7 6 10" fill="none" stroke="#3B2C5A"
-                  stroke-width="6" stroke-linecap="round"/>
-            <g stroke="#F2B95C" stroke-width="1.5" stroke-linecap="round" fill="none">
-              <path d="M165 174q3 3 6 0"/>
-              <path d="M175 173q3 3 6 0"/>
-            </g>
+            <!-- 鼻子 -->
+            <circle cx="176" cy="180" r="1.6" fill="#F2B95C"/>
           </g>
         </g>
       </g>
@@ -281,6 +275,9 @@
         <text x="194" y="141">z</text>
         <text x="203" y="132">z</text>
       </g>
+
+      <!-- 流星（脚本随机生成，放在最上层） -->
+      <g id="meteors"></g>
     </svg>
   </div>
 
@@ -342,6 +339,42 @@
     }
   }
   stars.appendChild(frag);
+
+  // 流星：每隔一会儿随机冒一颗
+  const meteors = document.getElementById('meteors');
+  const SVG = 'http://www.w3.org/2000/svg';
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function spawnMeteor() {
+    if (!calm && !document.body.classList.contains('asleep')) {
+      const len = 30 + Math.random() * 34;
+      const g  = document.createElementNS(SVG, 'g');
+      const ln = document.createElementNS(SVG, 'line');
+
+      ln.setAttribute('x1', 0);
+      ln.setAttribute('y1', 0);
+      ln.setAttribute('x2', len.toFixed(0));
+      ln.setAttribute('y2', (-len * 0.55).toFixed(0));
+      ln.setAttribute('stroke', 'url(#streak)');
+      ln.setAttribute('stroke-width', (1.6 + Math.random() * 1.2).toFixed(1));
+      ln.setAttribute('stroke-linecap', 'round');
+      g.appendChild(ln);
+
+      const dx = 110 + Math.random() * 110;
+      g.style.setProperty('--x',  (150 + Math.random() * 250).toFixed(0) + 'px');
+      g.style.setProperty('--y',  (20 + Math.random() * 210).toFixed(0) + 'px');
+      g.style.setProperty('--dx', dx.toFixed(0) + 'px');
+      g.style.setProperty('--dy', (dx * 0.55).toFixed(0) + 'px');
+      g.style.setProperty('--dur', (850 + Math.random() * 600).toFixed(0) + 'ms');
+      g.classList.add('meteor');
+      g.addEventListener('animationend', function () { g.remove(); });
+
+      meteors.appendChild(g);
+    }
+    setTimeout(spawnMeteor, 500 + Math.random() * 1700);
+  }
+
+  setTimeout(spawnMeteor, 1200);
 
   function say(title) {
     headEl.textContent = (CONFIG.name ? CONFIG.name + '，' : '') + title;
