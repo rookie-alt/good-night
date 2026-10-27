@@ -4,18 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#100E26">
-<title>该睡了哦</title>
+<title>瑞，该睡了</title>
 <style>
   :root {
     --night-0: #100E26;
     --cream: #F7EBD5;
     --cream-dim: #ADA6CE;
     --amber: #F2B95C;
-    --ease: cubic-bezier(.34, 1.4, .64, 1);
+
+    /* 取自 design-to-motion 的曲线 */
+    --e:  cubic-bezier(.16, 1, .3, 1);    /* 位移入场 */
+    --e2: cubic-bezier(.33, 1, .68, 1);   /* 透明度 / 模糊 */
+    --ease: cubic-bezier(.34, 1.4, .64, 1); /* 按钮回弹 */
   }
 
   * { box-sizing: border-box; }
-
   html, body { height: 100%; }
 
   body {
@@ -43,18 +46,56 @@
     justify-content: center;
     gap: 22px;
     text-align: center;
-    position: relative;
   }
+
+  /* ---------- 入场：6px 上浮 + 2px 模糊转清晰 ---------- */
+  .rise, .sky { animation-fill-mode: both; }
+
+  .rise {
+    animation-name: rise, defog;
+    animation-duration: .8s, .6s;
+    animation-timing-function: var(--e), var(--e2);
+    animation-delay: var(--d, 0s), var(--d, 0s);
+  }
+
+  .sky {
+    animation-name: pop, defog;
+    animation-duration: .9s, .7s;
+    animation-timing-function: var(--e), var(--e2);
+  }
+
+  @keyframes rise  { from { transform: translateY(6px); } to { transform: none; } }
+  @keyframes pop   { from { transform: scale(.94); } to { transform: none; } }
+  @keyframes defog { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
 
   /* ---------- 夜空 ---------- */
   .sky {
-    position: relative;
     width: 100%;
     max-width: 400px;
     aspect-ratio: 5 / 4;
   }
 
   .sky svg { width: 100%; height: 100%; overflow: visible; display: block; }
+
+  /* 呼吸般上下浮动 ±2.6px */
+  .moon-wrap { animation: bob 2.8s ease-in-out infinite; }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-2.6px); }
+  }
+
+  /* 猫在呼吸 */
+  .cat {
+    animation: breathe 3.6s ease-in-out infinite;
+    transform-box: view-box;
+    transform-origin: 200px 180px;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1, 1); }
+    50%      { transform: scale(1.03, 1.09); }
+  }
 
   .stars circle {
     fill: var(--cream);
@@ -68,31 +109,51 @@
 
   body.asleep .stars circle { animation-duration: 9s; opacity: .18; }
 
-  .halo { animation: breathe 7s ease-in-out infinite; transform-origin: 200px 118px; }
+  .halo { animation: glow 7s ease-in-out infinite; transform-origin: 200px 118px; transform-box: view-box; }
 
-  @keyframes breathe {
-    0%, 100% { opacity: .5;  transform: scale(1); }
-    50%      { opacity: .8;  transform: scale(1.06); }
+  @keyframes glow {
+    0%, 100% { opacity: .5; transform: scale(1); }
+    50%      { opacity: .85; transform: scale(1.05); }
   }
 
-  .zzz { opacity: 0; transition: opacity .8s ease; }
+  /* 流星：每轮只亮一小段，其余时间静止 */
+  .meteor {
+    opacity: 0;
+    transform: translate(var(--mx), var(--my));
+    animation: shoot 11s linear infinite;
+  }
 
+  .m1 { --mx: 336px; --my: 44px;  animation-delay: 3.2s; }
+  .m2 { --mx: 286px; --my: 128px; animation-delay: 9.4s; }
+  .m3 { --mx: 356px; --my: 196px; animation-delay: 15.8s; }
+
+  @keyframes shoot {
+    0%   { opacity: 0; transform: translate(var(--mx), var(--my)); }
+    1.5% { opacity: .85; }
+    7%   { opacity: 0; transform: translate(calc(var(--mx) - 132px), calc(var(--my) + 74px)); }
+    100% { opacity: 0; transform: translate(calc(var(--mx) - 132px), calc(var(--my) + 74px)); }
+  }
+
+  body.asleep .meteor { display: none; }
+
+  /* 关灯后飘起的 Zzz */
+  .zzz { opacity: 0; transition: opacity .8s ease; }
   body.asleep .zzz { opacity: 1; }
 
   .zzz text {
     fill: var(--cream-dim);
     font-size: 15px;
     font-family: ui-rounded, "SF Pro Rounded", sans-serif;
-    animation: rise 3.6s ease-in-out infinite;
+    animation: drift 3.6s ease-in-out infinite;
   }
 
   .zzz text:nth-child(2) { animation-delay: 1.2s; font-size: 12px; }
   .zzz text:nth-child(3) { animation-delay: 2.4s; font-size: 9px; }
 
-  @keyframes rise {
-    0%   { opacity: 0;   transform: translateY(6px); }
+  @keyframes drift {
+    0%   { opacity: 0; transform: translateY(6px); }
     30%  { opacity: .85; }
-    100% { opacity: 0;   transform: translateY(-22px); }
+    100% { opacity: 0; transform: translateY(-22px); }
   }
 
   /* ---------- 文案 ---------- */
@@ -106,10 +167,11 @@
 
   .headline {
     margin: 0;
-    font-size: clamp(32px, 9.5vw, 46px);
+    font-size: clamp(30px, 9vw, 44px);
     font-weight: 600;
-    line-height: 1.25;
+    line-height: 1.3;
     letter-spacing: .02em;
+    text-wrap: balance;
   }
 
   .note {
@@ -117,13 +179,10 @@
     font-size: 16px;
     line-height: 1.8;
     color: var(--cream-dim);
-    max-width: 26em;
+    max-width: 24em;
   }
 
-  .note strong {
-    color: var(--cream);
-    font-weight: 600;
-  }
+  .note strong { color: var(--cream); font-weight: 600; }
 
   /* ---------- 按钮 ---------- */
   .lamp {
@@ -139,10 +198,10 @@
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 8px 28px rgba(242, 185, 92, .28);
-    transition: transform .22s var(--ease), box-shadow .22s ease, background .3s ease;
+    transition: transform .22s var(--ease), box-shadow .22s ease, background .3s ease, color .3s ease;
   }
 
-  .lamp:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(242,185,92,.36); }
+  .lamp:hover  { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(242,185,92,.36); }
   .lamp:active { transform: translateY(0) scale(.97); }
   .lamp:focus-visible { outline: 3px solid var(--cream); outline-offset: 5px; }
 
@@ -150,18 +209,6 @@
     background: transparent;
     color: var(--cream-dim);
     box-shadow: inset 0 0 0 1px rgba(247, 235, 213, .22);
-  }
-
-  /* 入场：一次编排好的淡入 */
-  .page > * { animation: enter .9s var(--ease) both; }
-  .page > *:nth-child(2) { animation-delay: .12s; }
-  .page > *:nth-child(3) { animation-delay: .22s; }
-  .page > *:nth-child(4) { animation-delay: .34s; }
-  .page > *:nth-child(5) { animation-delay: .46s; }
-
-  @keyframes enter {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -177,10 +224,10 @@
 
 <main class="page">
 
-  <div class="sky" aria-hidden="true">
-    <svg viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg">
+  <div class="sky">
+    <svg viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="一弯月亮上睡着一只猫，夜空里有流星">
       <defs>
-        <radialGradient id="glow" cx="50%" cy="50%">
+        <radialGradient id="glowGrad" cx="50%" cy="50%">
           <stop offset="0%"   stop-color="#F2B95C" stop-opacity=".38"/>
           <stop offset="55%"  stop-color="#F2B95C" stop-opacity=".10"/>
           <stop offset="100%" stop-color="#F2B95C" stop-opacity="0"/>
@@ -189,6 +236,10 @@
           <stop offset="0%"   stop-color="#FBD58C"/>
           <stop offset="100%" stop-color="#E9A646"/>
         </linearGradient>
+        <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"   stop-color="#F7EBD5" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#F7EBD5" stop-opacity=".95"/>
+        </linearGradient>
         <mask id="boat">
           <rect x="0" y="0" width="400" height="320" fill="#000"/>
           <circle cx="200" cy="128" r="74" fill="#fff"/>
@@ -196,33 +247,35 @@
         </mask>
       </defs>
 
-      <!-- 星 -->
       <g class="stars" id="stars"></g>
 
-      <!-- 光晕 -->
-      <circle class="halo" cx="200" cy="118" r="118" fill="url(#glow)"/>
+      <!-- 流星 -->
+      <g class="meteor m1"><line x1="0" y1="0" x2="26" y2="-15" stroke="url(#streak)" stroke-width="1.6" stroke-linecap="round"/></g>
+      <g class="meteor m2"><line x1="0" y1="0" x2="20" y2="-11" stroke="url(#streak)" stroke-width="1.4" stroke-linecap="round"/></g>
+      <g class="meteor m3"><line x1="0" y1="0" x2="30" y2="-17" stroke="url(#streak)" stroke-width="1.8" stroke-linecap="round"/></g>
 
-      <!-- 月牙（船） -->
-      <circle cx="200" cy="128" r="74" fill="url(#moonFace)" mask="url(#boat)"/>
+      <g class="moon-wrap">
+        <circle class="halo" cx="200" cy="118" r="118" fill="url(#glowGrad)"/>
+        <circle cx="200" cy="128" r="74" fill="url(#moonFace)" mask="url(#boat)"/>
 
-      <!-- 睡在月亮上的猫 -->
-      <g transform="rotate(-7 200 180)">
-        <g fill="#3B2C5A">
-          <ellipse cx="204" cy="180" rx="31" ry="13"/>
-          <circle cx="172" cy="172" r="12"/>
-          <path d="M162 164l-5-11 12 6z"/>
-          <path d="M179 160l8-8 3 11z"/>
-        </g>
-        <path d="M233 181c12-1 15 7 6 10" fill="none" stroke="#3B2C5A"
-              stroke-width="6" stroke-linecap="round"/>
-        <!-- 闭着的眼睛 -->
-        <g stroke="#F2B95C" stroke-width="1.5" stroke-linecap="round" fill="none">
-          <path d="M165 174q3 3 6 0"/>
-          <path d="M175 173q3 3 6 0"/>
+        <g transform="rotate(-7 200 180)">
+          <g class="cat">
+            <g fill="#3B2C5A">
+              <ellipse cx="204" cy="180" rx="31" ry="13"/>
+              <circle cx="172" cy="172" r="12"/>
+              <path d="M162 164l-5-11 12 6z"/>
+              <path d="M179 160l8-8 3 11z"/>
+            </g>
+            <path d="M233 181c12-1 15 7 6 10" fill="none" stroke="#3B2C5A"
+                  stroke-width="6" stroke-linecap="round"/>
+            <g stroke="#F2B95C" stroke-width="1.5" stroke-linecap="round" fill="none">
+              <path d="M165 174q3 3 6 0"/>
+              <path d="M175 173q3 3 6 0"/>
+            </g>
+          </g>
         </g>
       </g>
 
-      <!-- 关灯后飘起的 Zzz -->
       <g class="zzz">
         <text x="182" y="152">z</text>
         <text x="194" y="141">z</text>
@@ -231,16 +284,16 @@
     </svg>
   </div>
 
-  <p class="clock" id="clock">现在是 --:--</p>
+  <p class="clock rise" id="clock" style="--d:.14s">现在是 --:--</p>
 
-  <h1 class="headline" id="headline">该睡了哦</h1>
+  <h1 class="headline rise" id="headline" style="--d:.2s">瑞，该睡了哦</h1>
 
-  <p class="note" id="note">
-    今天也辛苦了。<br>
-    <strong>剩下的事，明天再做也来得及。</strong>
+  <p class="note rise" id="note" style="--d:.32s">
+    早点睡，别熬夜了。<br>
+    <strong>明天的事，明天再说也来得及。</strong>
   </p>
 
-  <button class="lamp" id="lamp" type="button">好，我这就去睡</button>
+  <button class="lamp rise" id="lamp" type="button" style="--d:.44s">好，我这就去睡</button>
 
 </main>
 
@@ -250,16 +303,16 @@
 
   // ============ 只改这一块就行 ============
   const CONFIG = {
-    name: '',                       // 她的昵称，填了会变成「XX，该睡了哦」；留空不显示
+    name: '瑞',
     lines: {
       late:  '该睡了哦',            // 22:00 – 04:00
       later: '已经这么晚啦',         // 04:00 – 07:00
       early: '记得早点休息'          // 其它时间
     },
-    note: '今天也辛苦了。<br><strong>剩下的事，明天再做也来得及。</strong>',
+    note: '早点睡，别熬夜了。<br><strong>明天的事，明天再说也来得及。</strong>',
     asleep: {
-      title: '晚安，做个好梦',
-      note:  '灯关了。<br><strong>梦里见。</strong>'
+      title: '晚安',
+      note:  '灯关了。<br><strong>做个好梦。</strong>'
     },
     cta:     '好，我这就去睡',
     ctaBack: '开灯再看看'
@@ -271,15 +324,15 @@
   const noteEl  = document.getElementById('note');
   const btn     = document.getElementById('lamp');
 
-  // 星星：网格抖动撒点，比纯随机均匀，也省得手写一堆 circle
+  // 星星：网格抖动撒点，比纯随机均匀
   const stars = document.getElementById('stars');
   const frag = document.createDocumentFragment();
   for (let gx = 0; gx < 8; gx++) {
     for (let gy = 0; gy < 6; gy++) {
       const cx = gx * 50 + 8 + Math.random() * 36;
       const cy = gy * 46 + 8 + Math.random() * 32;
-      if (Math.random() < 0.35) continue;                       // 留白，别铺满
-      if (Math.hypot(cx - 200, cy - 140) < 104) continue;       // 让开月亮
+      if (Math.random() < 0.35) continue;
+      if (Math.hypot(cx - 200, cy - 140) < 104) continue;
       const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       c.setAttribute('cx', cx.toFixed(1));
       c.setAttribute('cy', cy.toFixed(1));
