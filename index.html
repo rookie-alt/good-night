@@ -77,6 +77,10 @@
 
   .sky svg { width: 100%; height: 100%; overflow: visible; display: block; }
 
+  /* 关灯前是满月，关灯后露出月牙 */
+  .moon-full { transition: opacity 1s ease; }
+  body.asleep .moon-full { opacity: 0; }
+
   /* 呼吸般上下浮动 ±2.6px */
   .moon-wrap { animation: bob 2.8s ease-in-out infinite; }
 
@@ -243,9 +247,10 @@
 
       <g class="moon-wrap">
         <circle class="halo" cx="200" cy="118" r="118" fill="url(#glowGrad)"/>
+        <circle class="moon-full" cx="200" cy="128" r="74" fill="url(#moonFace)"/>
         <circle cx="200" cy="128" r="74" fill="url(#moonFace)" mask="url(#boat)"/>
 
-        <g transform="rotate(-6 200 175)">
+        <g transform="translate(0 -6) rotate(-6 200 175)">
           <g class="cat">
             <!-- 身体 -->
             <ellipse cx="206" cy="176" rx="28" ry="16" fill="#3B2C5A"/>
@@ -361,8 +366,16 @@
       g.appendChild(ln);
 
       const dx = 110 + Math.random() * 110;
-      g.style.setProperty('--x',  (150 + Math.random() * 250).toFixed(0) + 'px');
-      g.style.setProperty('--y',  (20 + Math.random() * 210).toFixed(0) + 'px');
+
+      // 满天撒，只避开月亮本身，让它出现在周围的黑色夜空里
+      let x, y, tries = 0;
+      do {
+        x = 10 + Math.random() * 390;
+        y = 10 + Math.random() * 290;
+      } while (Math.hypot(x - 200, y - 128) < 88 && ++tries < 24);
+
+      g.style.setProperty('--x',  x.toFixed(0) + 'px');
+      g.style.setProperty('--y',  y.toFixed(0) + 'px');
       g.style.setProperty('--dx', dx.toFixed(0) + 'px');
       g.style.setProperty('--dy', (dx * 0.55).toFixed(0) + 'px');
       g.style.setProperty('--dur', (850 + Math.random() * 600).toFixed(0) + 'ms');
